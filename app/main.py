@@ -19,7 +19,8 @@ def datos_json():
 def crear_app(cliente_s3=None):
     app = Flask(__name__)
     app.secret_key = token_bytes(32)
-    csrf = SeaSurf(app)
+    csrf = SeaSurf()
+    csrf.init_app(app)
 
     def cliente_sin_sesion(peticion):
         # Los navegadores envían origen, metadatos de navegación o cookies.

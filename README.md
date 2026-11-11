@@ -50,7 +50,7 @@ Abre `htmlcov/index.html`. Cada fila muestra instrucciones ejecutables, instrucc
 
 ## Contenedores
 
-El Dockerfile elige Python 3.11 slim con `FROM` y establece el directorio con `WORKDIR`. El primer `COPY` y `RUN pip install` permiten reutilizar dependencias en la caché. El segundo `COPY` incorpora el proyecto filtrado por `.dockerignore`. `EXPOSE` declara el puerto 5000 y `CMD` inicia Flask.
+El Dockerfile elige Python 3.11 slim con `FROM` y establece el directorio con `WORKDIR`. El primer `COPY` y `RUN pip install` permiten reutilizar dependencias en la caché. La instalación comprueba los hashes de `requirements.lock`. Las instrucciones `COPY` incorporan solo la API, la infraestructura y sus pruebas. `USER` ejecuta el proceso sin privilegios de administrador. `EXPOSE` declara el puerto 5000 y `CMD` inicia Flask.
 
 En `docker-compose.yml`, `image` fija la versión de LocalStack y da nombre a la imagen compartida entre la API y las pruebas. `build` construye esa imagen. `environment` configura S3 y `ports` permite acceder desde el equipo. `healthcheck` comprueba S3 y la API. `depends_on` espera a que estén saludables. `command` prepara el bucket al arrancar la API y ejecuta pytest en el test-runner. Compose crea una red privada de proyecto con DNS: desde test-runner, `api:5000` identifica otro contenedor y `localhost` identifica el propio.
 
