@@ -1,8 +1,10 @@
 """API de notas. Cada instancia mantiene sus estudiantes en memoria."""
+from secrets import token_bytes
 from threading import Lock
 
 from botocore.exceptions import BotoCoreError, ClientError
 from flask import Flask, jsonify, request
+from flask_seasurf import SeaSurf
 
 from app.calculadora import calcular_definitiva, determinar_estado
 from app.reportes import exportar_a_s3, generar_csv
@@ -16,6 +18,17 @@ def datos_json():
 
 def crear_app(cliente_s3=None):
     app = Flask(__name__)
+    app.secret_key = token_bytes(32)
+    csrf = SeaSurf(app)
+
+    def cliente_sin_sesion(peticion):
+        # Los navegadores envían origen, metadatos de navegación o cookies.
+        return (not peticion.cookies
+                and all(c not in peticion.headers for c in ("Origin", "Referer", "Sec-Fetch-Site"))
+                and (peticion.is_json or not peticion.content_type))
+
+    csrf.skip_validation(cliente_sin_sesion)
+    csrf.disable_cookie(lambda respuesta: cliente_sin_sesion(request))
     estudiantes = {}
     bloqueo = Lock()
 
@@ -46,7 +59,7 @@ def crear_app(cliente_s3=None):
                 definitiva = calcular_definitiva(*(datos.get(f"momento{i}") for i in (1, 2, 3)))
             except (TypeError, ValueError) as error:
                 return jsonify(error=str(error)), 400
-            resumen = dict(definitiva=definitiva, estado=determinar_estado(definitiva))
+            resumen = {"definitiva": definitiva, "estado": determinar_estado(definitiva)}
             estudiantes[identificador].update(resumen)
         return jsonify(id=identificador, **resumen), 201
 

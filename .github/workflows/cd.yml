@@ -12,14 +12,16 @@ concurrency:
   cancel-in-progress: false
 jobs:
   publicar:
-    if: github.event.workflow_run.event == 'push' && github.event.workflow_run.conclusion == 'success'
+    if: github.event.workflow_run.event == 'push' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_repository.full_name == github.repository
     runs-on: ubuntu-latest
     env:
       REVISION: ${{ github.event.workflow_run.head_sha }}
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          ref: refs/heads/main
+      - name: Verificar la revisión aprobada por CI
+        run: test "$(git rev-parse HEAD)" = "$REVISION"
       - name: Autenticar en GHCR
         env:
           TOKEN: ${{ secrets.GITHUB_TOKEN }}

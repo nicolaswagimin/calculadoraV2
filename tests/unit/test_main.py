@@ -40,3 +40,19 @@ def test_error_de_almacenamiento(servicios):
     # Assert
     assert respuesta.status_code == 503
     assert "error" in respuesta.json
+
+
+def test_navegador_requiere_token_csrf(servicios):
+    # Arrange
+    cliente, _ = servicios
+    cabeceras = {"Origin": "http://localhost"}
+    cliente.get("/salud", headers=cabeceras)
+    datos = {"nombre": "Ana", "codigo": "A1"}
+    # Act
+    rechazo = cliente.post("/estudiantes", json=datos, headers=cabeceras)
+    token = cliente.get_cookie("_csrf_token").value
+    aceptado = cliente.post("/estudiantes", json=datos,
+                            headers={**cabeceras, "X-CSRFToken": token})
+    # Assert
+    assert rechazo.status_code == 403
+    assert aceptado.status_code == 201
