@@ -14,7 +14,8 @@ jobs:
         with:
           python-version: "3.11"
           cache: pip
-      - run: pip install --only-binary :all: --require-hashes -r requirements.lock
+      - run: >-
+          pip install --only-binary :all: --require-hashes -r requirements.lock
       - run: docker compose up -d --build --wait --wait-timeout 120 api
       - run: >-
           locust -f load/locustfile.py --host http://localhost:5000

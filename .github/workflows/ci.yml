@@ -19,7 +19,8 @@ jobs:
         with:
           python-version: "3.11"
           cache: pip
-      - run: pip install --only-binary :all: --require-hashes -r requirements.lock
+      - run: >-
+          pip install --only-binary :all: --require-hashes -r requirements.lock
       - run: pytest tests/unit
       - uses: actions/upload-artifact@v4
         if: always()
